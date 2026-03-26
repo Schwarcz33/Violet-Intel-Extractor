@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Violet Intel Extractor — Client Website Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a28;--card:#16162280;
+  --accent:#7c5cfc;--accent-glow:#7c5cfc40;--accent-bright:#a78bfa;
+  --text:#e8e6f0;--text2:#9896a8;--dim:#5a586a;
+  --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;
+  --border:#ffffff0a;--radius:12px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;z-index:0;pointer-events:none}
+.bg-glow{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(150px);opacity:.12;pointer-events:none;z-index:0}
+.bg-glow-1{top:-200px;left:-100px;background:var(--accent)}
+.bg-glow-2{bottom:-200px;right:-100px;background:#4f46e5}
+
+.app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:2rem}
+
+header{text-align:center;margin-bottom:2.5rem}
+header .logo{display:inline-flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+header .logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),#4f46e5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:#fff;box-shadow:0 0 25px var(--accent-glow)}
+header h1{font-size:1.8rem;font-weight:900;background:linear-gradient(135deg,var(--text),var(--accent-bright));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header p{color:var(--text2);font-size:.85rem;max-width:500px;margin:0 auto}
+
+/* Input Section */
+.input-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;backdrop-filter:blur(10px);margin-bottom:2rem}
+.input-section h2{font-size:1rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.url-row{display:flex;gap:.75rem;margin-bottom:1rem}
+.url-input{flex:1;padding:.85rem 1.1rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:.9rem;outline:none;transition:border-color .3s}
+.url-input:focus{border-color:var(--accent)}
+.url-input::placeholder{color:var(--dim)}
+.btn{padding:.85rem 1.5rem;border:none;border-radius:8px;font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:.5rem}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#5b3fd4);color:#fff;box-shadow:0 4px 20px var(--accent-glow)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(124,92,252,.4)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--text)}
+.btn-success{background:var(--success);color:#fff}
+.btn-sm{padding:.5rem 1rem;font-size:.75rem}
+
+.options-row{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+.option-group{display:flex;align-items:center;gap:.5rem}
+.option-group label{font-size:.72rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.checkbox{width:18px;height:18px;accent-color:var(--accent)}
+
+.groq-key-row{display:flex;gap:.75rem;align-items:center;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}
+.groq-key-row input{flex:1;padding:.6rem .75rem;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:.8rem;outline:none}
+.groq-key-row .note{font-size:.65rem;color:var(--dim)}
+
+/* Progress */
+.progress-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;display:none}
+.progress-section.active{display:block}
+.progress-bar{width:100%;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:1rem}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-bright));border-radius:3px;transition:width .5s;width:0}
+.progress-log{max-height:200px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text2);line-height:1.8}
+.progress-log .log-item{padding:.15rem 0;border-bottom:1px solid rgba(255,255,255,.02)}
+.progress-log .log-item.success{color:var(--success)}
+.progress-log .log-item.error{color:var(--danger)}
+.progress-log .log-item.info{color:var(--info)}
+
+/* Results */
+.results-section{display:none}
+.results-section.active{display:block}
+.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+.results-header h2{font-size:1.2rem;font-weight:800}
+.export-btns{display:flex;gap:.5rem}
+
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;backdrop-filter:blur(10px)}
+.result-card h3{font-size:.9rem;font-weight:700;color:var(--accent-bright);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+.result-card h3 .badge{font-size:.6rem;padding:.2rem .5rem;background:var(--accent-glow);border-radius:4px;font-weight:600}
+.result-content{font-size:.82rem;color:var(--text2);line-height:1.8;white-space:pre-wrap}
+.result-content ul{padding-left:1.2rem;margin:.5rem 0}
+.result-content li{margin-bottom:.25rem}
+.result-content strong{color:var(--text);font-weight:600}
+
+.raw-pages{margin-top:2rem}
+.raw-pages summary{font-size:.8rem;font-weight:600;color:var(--text2);cursor:pointer;padding:.5rem 0}
+.raw-page{background:var(--bg3);border-radius:8px;padding:1rem;margin:.5rem 0;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--dim);max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+
+/* Preview Modal for export */
+#exportPreview{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);overflow-y:auto;padding:2rem}
+#exportPreview.show{display:block}
+#exportContent{max-width:800px;margin:0 auto;background:#fff;color:#111;padding:3rem;border-radius:12px;font-family:'Inter',sans-serif;line-height:1.8}
+#exportContent h1{font-size:1.5rem;border-bottom:2px solid #7c5cfc;padding-bottom:.5rem;margin-bottom:1.5rem}
+#exportContent h2{font-size:1.1rem;color:#7c5cfc;margin:1.5rem 0 .75rem;border-left:3px solid #7c5cfc;padding-left:.75rem}
+#exportContent p,#exportContent li{font-size:.85rem;margin-bottom:.5rem}
+#exportContent ul{padding-left:1.5rem}
+
+@media(max-width:600px){
+  .app{padding:1rem}
+  .url-row{flex-direction:column}
+  .options-row{flex-direction:column;align-items:flex-start}
+  .export-btns{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">VIE</div>
+    </div>
+    <h1>Violet Intel Extractor</h1>
+    <p>Scrape any client website and generate a structured knowledge base for chatbot/voice agent deployment.</p>
+  </header>
+
+  <!-- Input -->
+  <div class="input-section">
+    <h2>&#127760; Target Website</h2>
+    <div class="url-row">
+      <input type="url" class="url-input" id="urlInput" placeholder="https://example.com" value="">
+      <button class="btn btn-primary" id="btnExtract" onclick="startExtraction()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Extract Intel
+      </button>
+    </div>
+
+    <div class="options-row">
+      <div class="option-group">
+        <input type="checkbox" class="checkbox" id="optDeep" checked>
+        <label for="optDeep">Deep crawl (follow internal links)</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" class="checkbox" id="optAI" checked>
+        <label for="optAI">AI structuring (Groq)</label>
+      </div>
+      <div class="option-group">
+        <label>Max pages:</label>
+        <select id="maxPages" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:.3rem .5rem;font-size:.75rem">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="groq-key-row">
+      <label style="font-size:.72rem;color:var(--text2);font-weight:600;white-space:nowrap">GROQ KEY</label>
+      <input type="password" id="groqKey" placeholder="gsk_..." value="">
+      <span class="note">Required for AI structuring</span>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-section" id="progressSection">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+      <span style="font-size:.8rem;font-weight:700" id="progressTitle">Extracting...</span>
+      <span style="font-size:.7rem;color:var(--text2)" id="progressPercent">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-log" id="progressLog"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section" id="resultsSection">
+    <div class="results-header">
+      <h2 id="resultsTitle">&#9989; Intelligence Report</h2>
+      <div class="export-btns">
+        <button class="btn btn-secondary btn-sm" onclick="exportTxt()">&#128196; Export TXT</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportDocx()">&#128195; Export DOCX</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportPdf()">&#128462; Export PDF</button>
+        <button class="btn btn-success btn-sm" onclick="copyAll()">&#128203; Copy All</button>
+      </div>
+    </div>
+    <div id="resultsCards"></div>
+
+    <details class="raw-pages">
+      <summary>&#128269; Raw Scraped Pages (<span id="pageCount">0</span>)</summary>
+      <div id="rawPages"></div>
+    </details>
+  </div>
+</div>
+
+<!-- Hidden export preview -->
+<div id="exportPreview" onclick="if(event.target===this)this.classList.remove('show')">
+  <div id="exportContent"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// VIOLET INTEL EXTRACTOR
+// ═══════════════════════════════════════════
+
+let extractedData = {};
+let rawPageData = [];
+let structuredReport = '';
+
+// Load saved Groq key
+const savedKey = localStorage.getItem('vie_groq_key') || '';
+document.getElementById('groqKey').value = savedKey;
+
+// ── Jina AI Reader (renders JS, returns clean markdown) ──
+async function fetchWithJina(url) {
+  try {
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: {
+        'Accept': 'text/plain',
+        'X-Return-Format': 'text'
+      },
+      signal: AbortSignal.timeout(30000)
+    });
+    if (res.ok) {
+      const text = await res.text();
+      if (text.length > 50) return text;
+    }
+  } catch(e) {
+    console.warn('Jina failed, trying CORS proxies...', e);
+  }
+
+  // Fallback to CORS proxies
+  const PROXIES = [
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  ];
+  for (const proxy of PROXIES) {
+    try {
+      const res = await fetch(proxy(url), { signal: AbortSignal.timeout(15000) });
+      if (res.ok) {
+        const html = await res.text();
+        if (html.length > 100) return html;
+      }
+    } catch(e) { continue; }
+  }
+  throw new Error(`All fetch methods failed for: ${url}`);
+}
+
+// ── Content Parser (handles both HTML and Jina markdown/text) ──
+function extractTextFromHtml(content) {
+  // Check if this is Jina Reader output (markdown/plain text, not HTML)
+  const isJinaText = !content.trim().startsWith('<') || content.includes('Title:') || content.includes('URL Source:');
+
+  if (isJinaText) {
+    return extractFromJinaText(content);
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
+
+  // Remove scripts, styles, nav, footer noise
+  doc.querySelectorAll('script, style, noscript, svg, iframe').forEach(el => el.remove());
+
+  const data = {
+    title: doc.title || '',
+    meta: {},
+    headings: [],
+    paragraphs: [],
+    links: [],
+    images: [],
+    lists: [],
+    contacts: {},
+    text: ''
+  };
+
+  // Meta tags
+  doc.querySelectorAll('meta').forEach(m => {
+    const name = m.getAttribute('name') || m.getAttribute('property') || '';
+    const content = m.getAttribute('content') || '';
+    if (content && name) data.meta[name] = content;
+  });
+
+  // Headings
+  doc.querySelectorAll('h1,h2,h3,h4').forEach(h => {
+    const t = h.textContent.trim();
+    if (t.length > 1 && t.length < 200) data.headings.push({ level: h.tagName, text: t });
+  });
+
+  // Paragraphs
+  doc.querySelectorAll('p, li, td, blockquote, .description, [class*="desc"], [class*="content"], [class*="text"], [class*="about"], [class*="service"]').forEach(p => {
+    const t = p.textContent.trim();
+    if (t.length > 15 && t.length < 2000) data.paragraphs.push(t);
+  });
+
+  // Lists
+  doc.querySelectorAll('ul, ol').forEach(list => {
+    const items = [...list.querySelectorAll('li')].map(li => li.textContent.trim()).filter(t => t.length > 3);
+    if (items.length > 0) data.lists.push(items);
+  });
+
+  // Links (internal)
+  doc.querySelectorAll('a[href]').forEach(a => {
+    const href = a.getAttribute('href');
+    const text = a.textContent.trim();
+    if (href && text && !href.startsWith('#') && !href.startsWith('javascript') && !href.includes('mailto:'))
+      data.links.push({ href, text });
+  });
+
+  // Contact info extraction
+  const bodyText = doc.body?.textContent || '';
+  const emails = bodyText.match(/[\w.+-]+@[\w-]+\.[\w.]+/g);
+  const phones = bodyText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/g);
+  const addresses = bodyText.match(/\d+\s[\w\s]+(?:St|Street|Ave|Avenue|Rd|Road|Dr|Drive|Blvd|Boulevard|Way|Lane|Ln|Ct|Court|Pl|Place)[,.\s]+[\w\s]+(?:\d{4,5})?/gi);
+  if (emails) data.contacts.emails = [...new Set(emails)];
+  if (phones) data.contacts.phones = [...new Set(phones.filter(p => p.replace(/\D/g,'').length >= 8))];
+  if (addresses) data.contacts.addresses = [...new Set(addresses)];
+
+  // Full text
+  data.text = (doc.body?.textContent || '').replace(/\s+/g, ' ').trim();
+
+  // Remove duplicates
+  data.paragraphs = [...new Set(data.paragraphs)];
+
+  return data;
+}
+
+// ── Jina Text Parser ──
+function extractFromJinaText(text) {
+  const data = {
+    title: '',
+    meta: {},
+    headings: [],
+    paragraphs: [],
+    links: [],
+    images: [],
+    lists: [],
+    contacts: {},
+    text: text
+  };
+
+  const lines = text.split('\n');
+
+  // Extract title
+  const titleMatch = text.match(/Title:\s*(.+)/i);
+  if (titleMatch) data.title = titleMatch[1].trim();
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+
+    // Headings (markdown # or all caps)
+    if (trimmed.startsWith('# ')) {
+      data.headings.push({ level: 'H1', text: trimmed.replace(/^#+\s*/, '') });
+    } else if (trimmed.startsWith('## ')) {
+      data.headings.push({ level: 'H2', text: trimmed.replace(/^#+\s*/, '') });
+    } else if (trimmed.startsWith('### ')) {
+      data.headings.push({ level: 'H3', text: trimmed.replace(/^#+\s*/, '') });
+    }
+    // List items
+    else if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || /^\d+\.\s/.test(trimmed)) {
+      const item = trimmed.replace(/^[-*]\s|^\d+\.\s/, '');
+      if (item.length > 5) data.paragraphs.push(item);
+    }
+    // Links
+    else if (trimmed.includes('](')) {
+      const linkMatch = trimmed.match(/\[([^\]]+)\]\(([^)]+)\)/g);
+      if (linkMatch) {
+        linkMatch.forEach(m => {
+          const parts = m.match(/\[([^\]]+)\]\(([^)]+)\)/);
+          if (parts) data.links.push({ text: parts[1], href: parts[2] });
+        });
+      }
+    }
+    // Regular paragraphs (skip metadata lines)
+    else if (trimmed.length > 20 && !trimmed.startsWith('Title:') && !trimmed.startsWith('URL Source:') && !trimmed.startsWith('Markdown Content:')) {
+      data.paragraphs.push(trimmed.replace(/\*\*/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'));
+    }
+  });
+
+  // Contact extraction
+  const emails = text.match(/[\w.+-]+@[\w-]+\.[\w.]+/g);
+  const phones = text.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/g);
+  if (emails) data.contacts.emails = [...new Set(emails)];
+  if (phones) data.contacts.phones = [...new Set(phones.filter(p => p.replace(/\D/g,'').length >= 8))];
+
+  data.paragraphs = [...new Set(data.paragraphs)];
+  return data;
+}
+
+// ── Extract Internal Links (handles both HTML and Jina markdown) ──
+function getInternalLinks(content, baseUrl) {
+  const base = new URL(baseUrl);
+  const links = new Set();
+
+  // Extract from markdown links [text](url)
+  const mdLinks = content.match(/\[([^\]]*)\]\(([^)]+)\)/g) || [];
+  mdLinks.forEach(m => {
+    const parts = m.match(/\[([^\]]*)\]\(([^)]+)\)/);
+    if (parts) {
+      try {
+        let url = new URL(parts[2], baseUrl);
+        if (url.hostname === base.hostname) {
+          url.hash = '';
+          const clean = url.href.replace(/\/$/, '');
+          if (!/\.(pdf|jpg|jpeg|png|gif|svg|zip|mp4|mp3|css|js)$/i.test(clean)) links.add(clean);
+        }
+      } catch(e) {}
+    }
+  });
+
+  // Also try HTML parsing in case it's raw HTML
+  if (content.trim().startsWith('<')) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    doc.querySelectorAll('a[href]').forEach(a => {
+      try {
+        const href = a.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript') || href.includes('mailto:') || href.includes('tel:')) return;
+        let url = new URL(href, baseUrl);
+        if (url.hostname === base.hostname) {
+          url.hash = '';
+          const clean = url.href.replace(/\/$/, '');
+          if (!/\.(pdf|jpg|jpeg|png|gif|svg|zip|mp4|mp3|css|js)$/i.test(clean)) links.add(clean);
+        }
+      } catch(e) {}
+    });
+  }
+
+  return [...links];
+}
+
+// ── Prioritize pages ──
+function prioritizeLinks(links) {
+  const priority = ['about', 'service', 'contact', 'team', 'pricing', 'price', 'faq', 'testimonial', 'review', 'portfolio', 'work', 'project', 'client', 'partner', 'career', 'blog', 'product', 'solution', 'feature', 'how-it-work', 'why', 'mission', 'value', 'story'];
+  return links.sort((a, b) => {
+    const aScore = priority.findIndex(k => a.toLowerCase().includes(k));
+    const bScore = priority.findIndex(k => b.toLowerCase().includes(k));
+    const aP = aScore >= 0 ? aScore : 999;
+    const bP = bScore >= 0 ? bScore : 999;
+    return aP - bP;
+  });
+}
+
+// ── Logging ──
+function log(msg, type = '') {
+  const el = document.getElementById('progressLog');
+  const item = document.createElement('div');
+  item.className = `log-item ${type}`;
+  item.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(item);
+  el.scrollTop = el.scrollHeight;
+}
+
+function setProgress(pct) {
+  document.getElementById('progressFill').style.width = `${pct}%`;
+  document.getElementById('progressPercent').textContent = `${Math.round(pct)}%`;
+}
+
+// ── Main Extraction ──
+async function startExtraction() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { alert('Please enter a URL'); return; }
+
+  const deepCrawl = document.getElementById('optDeep').checked;
+  const useAI = document.getElementById('optAI').checked;
+  const maxPages = parseInt(document.getElementById('maxPages').value);
+  const groqKey = document.getElementById('groqKey').value.trim();
+
+  if (useAI && !groqKey) { alert('Groq API key is required for AI structuring'); return; }
+  if (groqKey) localStorage.setItem('vie_groq_key', groqKey);
+
+  // Reset
+  rawPageData = [];
+  extractedData = {};
+  document.getElementById('progressLog').innerHTML = '';
+  document.getElementById('resultsSection').classList.remove('active');
+  document.getElementById('progressSection').classList.add('active');
+  document.getElementById('btnExtract').disabled = true;
+  setProgress(0);
+
+  try {
+    // Step 1: Fetch homepage
+    log(`Fetching homepage: ${url}`, 'info');
+    const homeHtml = await fetchWithJina(url);
+    const homeData = extractTextFromHtml(homeHtml);
+    rawPageData.push({ url, title: homeData.title, data: homeData });
+    log(`Homepage loaded: "${homeData.title}" (${homeData.paragraphs.length} paragraphs, ${homeData.headings.length} headings)`, 'success');
+    setProgress(15);
+
+    // Step 2: Deep crawl
+    if (deepCrawl) {
+      const allLinks = getInternalLinks(homeHtml, url);
+      const prioritized = prioritizeLinks(allLinks);
+      const toVisit = prioritized.slice(0, maxPages - 1); // -1 for homepage
+      log(`Found ${allLinks.length} internal links, crawling top ${toVisit.length}...`, 'info');
+
+      for (let i = 0; i < toVisit.length; i++) {
+        const pageUrl = toVisit[i];
+        const pct = 15 + ((i + 1) / toVisit.length) * 45;
+        try {
+          log(`Crawling: ${pageUrl}`);
+          const html = await fetchWithJina(pageUrl);
+          const data = extractTextFromHtml(html);
+          rawPageData.push({ url: pageUrl, title: data.title, data });
+          log(`Loaded: "${data.title || pageUrl}" (${data.paragraphs.length} paragraphs)`, 'success');
+        } catch(e) {
+          log(`Failed: ${pageUrl} - ${e.message}`, 'error');
+        }
+        setProgress(pct);
+        // Small delay to avoid rate limiting
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+
+    setProgress(65);
+
+    // Step 3: Merge all data
+    log('Merging extracted data...', 'info');
+    const merged = mergePageData(rawPageData);
+    extractedData = merged;
+    log(`Total: ${merged.allParagraphs.length} unique paragraphs, ${merged.allHeadings.length} headings, ${Object.keys(merged.contacts).length} contact types`, 'success');
+    setProgress(70);
+
+    // Step 4: AI Structuring
+    if (useAI && groqKey) {
+      log('Sending to Groq AI for intelligent structuring...', 'info');
+      document.getElementById('progressTitle').textContent = 'AI Processing...';
+      const report = await structureWithGroq(merged, groqKey);
+      structuredReport = report;
+      log('AI structuring complete!', 'success');
+      setProgress(95);
+    } else {
+      structuredReport = generateBasicReport(merged);
+      setProgress(95);
+    }
+
+    // Step 5: Display results
+    displayResults(structuredReport, merged);
+    setProgress(100);
+    log('Extraction complete!', 'success');
+    document.getElementById('progressTitle').textContent = 'Complete!';
+
+  } catch(e) {
+    log(`Error: ${e.message}`, 'error');
+  } finally {
+    document.getElementById('btnExtract').disabled = false;
+  }
+}
+
+// ── Merge Pages ──
+function mergePageData(pages) {
+  const merged = {
+    siteName: pages[0]?.data.title || '',
+    pageCount: pages.length,
+    urls: pages.map(p => p.url),
+    allHeadings: [],
+    allParagraphs: [],
+    allLists: [],
+    contacts: {},
+    meta: {},
+    pages: pages.map(p => ({ url: p.url, title: p.title }))
+  };
+
+  const seenP = new Set();
+  const seenH = new Set();
+
+  pages.forEach(p => {
+    p.data.headings.forEach(h => {
+      if (!seenH.has(h.text)) { seenH.add(h.text); merged.allHeadings.push(h); }
+    });
+    p.data.paragraphs.forEach(t => {
+      if (!seenP.has(t) && t.length > 20) { seenP.add(t); merged.allParagraphs.push(t); }
+    });
+    p.data.lists.forEach(l => merged.allLists.push(l));
+    Object.assign(merged.meta, p.data.meta);
+    Object.entries(p.data.contacts).forEach(([k, v]) => {
+      if (!merged.contacts[k]) merged.contacts[k] = [];
+      merged.contacts[k] = [...new Set([...merged.contacts[k], ...v])];
+    });
+  });
+
+  return merged;
+}
+
+// ── Groq AI Structuring ──
+async function structureWithGroq(data, apiKey) {
+  const contentSummary = `
+WEBSITE: ${data.siteName}
+PAGES CRAWLED: ${data.pageCount} (${data.urls.join(', ')})
+
+HEADINGS:
+${data.allHeadings.map(h => `[${h.level}] ${h.text}`).join('\n')}
+
+KEY CONTENT:
+${data.allParagraphs.slice(0, 80).join('\n---\n')}
+
+LISTS FOUND:
+${data.allLists.slice(0, 15).map(l => l.join(', ')).join('\n')}
+
+CONTACT INFO:
+${JSON.stringify(data.contacts, null, 2)}
+
+META TAGS:
+${JSON.stringify(data.meta, null, 2)}
+`.trim();
+
+  const systemPrompt = `You are a business intelligence analyst for Violet Media, extracting structured information from client websites to build chatbot/voice agent knowledge bases.
+
+Analyse the scraped website data and produce a STRUCTURED INTELLIGENCE REPORT with these exact sections:
+
+1. COMPANY OVERVIEW
+- Company name, tagline, industry
+- What they do (2-3 sentences)
+- Key differentiators/USPs
+
+2. SERVICES & PRODUCTS
+- List each service/product with description
+- Pricing if available
+- Service areas/coverage
+
+3. ABOUT & TEAM
+- Company history/story
+- Mission/values if found
+- Team members and roles if found
+- Certifications, accreditations, awards
+
+4. CONTACT INFORMATION
+- Phone numbers
+- Email addresses
+- Physical address
+- Social media links
+- Business hours if found
+
+5. TARGET AUDIENCE
+- Who are their customers
+- Industries they serve
+- Geographic focus
+
+6. BRAND VOICE & TONE
+- How they communicate (formal/casual/technical)
+- Key phrases they use repeatedly
+- Brand personality
+
+7. FAQ / COMMON QUESTIONS
+- Generate 5-8 likely customer questions based on the content
+- Include suggested answers from the website content
+
+8. CHATBOT SYSTEM PROMPT (READY TO USE)
+- Generate a complete system prompt for a chatbot/voice agent based on all the above data
+- Include company context, tone guidelines, key facts, and response instructions
+
+RULES:
+- Never use markdown formatting (no **, ##, etc.) — use plain text with clear section headers
+- Be specific and factual — only include info found in the data
+- If info is missing, write "Not found on website"
+- Keep it concise but comprehensive`;
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'openai/gpt-oss-120b',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Here is the scraped website data:\n\n${contentSummary}` }
+      ],
+      max_tokens: 4096,
+      temperature: 0.3
+    })
+  });
+
+  const json = await res.json();
+  if (json.choices && json.choices[0]) {
+    return json.choices[0].message.content;
+  }
+  throw new Error('Groq API failed: ' + JSON.stringify(json));
+}
+
+// ── Basic Report (no AI) ──
+function generateBasicReport(data) {
+  let report = `WEBSITE INTELLIGENCE REPORT\n`;
+  report += `Site: ${data.siteName}\n`;
+  report += `Pages crawled: ${data.pageCount}\n`;
+  report += `Generated: ${new Date().toLocaleString()}\n\n`;
+
+  report += `--- HEADINGS ---\n`;
+  data.allHeadings.forEach(h => report += `[${h.level}] ${h.text}\n`);
+
+  report += `\n--- KEY CONTENT ---\n`;
+  data.allParagraphs.slice(0, 50).forEach(p => report += `${p}\n\n`);
+
+  report += `\n--- CONTACT INFO ---\n`;
+  Object.entries(data.contacts).forEach(([k, v]) => report += `${k}: ${v.join(', ')}\n`);
+
+  report += `\n--- META ---\n`;
+  Object.entries(data.meta).forEach(([k, v]) => report += `${k}: ${v}\n`);
+
+  return report;
+}
+
+// ── Display Results ──
+function displayResults(report, merged) {
+  const el = document.getElementById('resultsSection');
+  el.classList.add('active');
+
+  const cards = document.getElementById('resultsCards');
+  cards.innerHTML = '';
+
+  // Split report into sections
+  const sections = report.split(/\n(?=\d+\.\s|---\s)/);
+  sections.forEach(section => {
+    const trimmed = section.trim();
+    if (!trimmed) return;
+
+    const card = document.createElement('div');
+    card.className = 'result-card';
+
+    const firstLine = trimmed.split('\n')[0];
+    const rest = trimmed.split('\n').slice(1).join('\n').trim();
+
+    card.innerHTML = `
+      <h3>${escapeHtml(firstLine)}</h3>
+      <div class="result-content">${escapeHtml(rest)}</div>
+    `;
+    cards.appendChild(card);
+  });
+
+  // Raw pages
+  document.getElementById('pageCount').textContent = rawPageData.length;
+  const rawEl = document.getElementById('rawPages');
+  rawEl.innerHTML = '';
+  rawPageData.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'raw-page';
+    div.textContent = `URL: ${p.url}\nTitle: ${p.title}\nParagraphs: ${p.data.paragraphs.length}\nHeadings: ${p.data.headings.length}\n\n${p.data.paragraphs.slice(0, 10).join('\n\n')}`;
+    rawEl.appendChild(div);
+  });
+
+  document.getElementById('resultsTitle').textContent = `Intelligence Report: ${merged.siteName}`;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ── Export TXT ──
+function exportTxt() {
+  const blob = new Blob([structuredReport], { type: 'text/plain' });
+  downloadBlob(blob, `intel-report-${getFileName()}.txt`);
+}
+
+// ── Export PDF ──
+function exportPdf() {
+  const el = document.getElementById('exportContent');
+  el.innerHTML = formatForExport(structuredReport);
+  document.getElementById('exportPreview').classList.add('show');
+
+  setTimeout(() => {
+    html2pdf().from(el).set({
+      margin: [15, 15, 15, 15],
+      filename: `intel-report-${getFileName()}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { format: 'a4' }
+    }).save().then(() => {
+      document.getElementById('exportPreview').classList.remove('show');
+    });
+  }, 200);
+}
+
+// ── Export DOCX ──
+function exportDocx() {
+  const lines = structuredReport.split('\n');
+  const children = [];
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      children.push(new docx.Paragraph({ text: '' }));
+      return;
+    }
+
+    // Section headers (numbered)
+    if (/^\d+\./.test(trimmed)) {
+      children.push(new docx.Paragraph({
+        children: [new docx.TextRun({ text: trimmed, bold: true, size: 28, color: '7C5CFC' })],
+        spacing: { before: 400, after: 200 }
+      }));
+    }
+    // Sub-headers
+    else if (trimmed.startsWith('---') || trimmed.startsWith('===')) {
+      children.push(new docx.Paragraph({
+        children: [new docx.TextRun({ text: trimmed.replace(/[-=]/g, '').trim(), bold: true, size: 24 })],
+        spacing: { before: 300, after: 100 }
+      }));
+    }
+    // Bullet points
+    else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      children.push(new docx.Paragraph({
+        children: [new docx.TextRun({ text: trimmed.substring(2), size: 20 })],
+        bullet: { level: 0 }
+      }));
+    }
+    // Normal text
+    else {
+      children.push(new docx.Paragraph({
+        children: [new docx.TextRun({ text: trimmed, size: 20 })],
+        spacing: { after: 100 }
+      }));
+    }
+  });
+
+  const doc = new docx.Document({
+    sections: [{
+      properties: {},
+      headers: {
+        default: new docx.Header({
+          children: [new docx.Paragraph({
+            children: [new docx.TextRun({ text: 'Violet Media — Client Intelligence Report', size: 16, color: '7C5CFC', italics: true })]
+          })]
+        })
+      },
+      children: [
+        new docx.Paragraph({
+          children: [new docx.TextRun({ text: 'CLIENT INTELLIGENCE REPORT', bold: true, size: 36, color: '7C5CFC' })],
+          spacing: { after: 100 }
+        }),
+        new docx.Paragraph({
+          children: [new docx.TextRun({ text: `Generated: ${new Date().toLocaleString()} | Violet Media Intel Extractor`, size: 18, color: '666666' })],
+          spacing: { after: 400 }
+        }),
+        ...children
+      ]
+    }]
+  });
+
+  docx.Packer.toBlob(doc).then(blob => {
+    downloadBlob(blob, `intel-report-${getFileName()}.docx`);
+  });
+}
+
+// ── Copy All ──
+function copyAll() {
+  navigator.clipboard.writeText(structuredReport).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+
+// ── Helpers ──
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function getFileName() {
+  const url = document.getElementById('urlInput').value;
+  try {
+    return new URL(url).hostname.replace(/[^a-z0-9]/gi, '-');
+  } catch(e) { return 'website'; }
+}
+
+function formatForExport(text) {
+  let html = `<h1 style="color:#7c5cfc">Client Intelligence Report</h1>`;
+  html += `<p style="color:#999;font-size:.8rem">Generated: ${new Date().toLocaleString()} | Violet Media Intel Extractor</p><hr>`;
+
+  const lines = text.split('\n');
+  lines.forEach(line => {
+    const t = line.trim();
+    if (!t) { html += '<br>'; return; }
+    if (/^\d+\./.test(t)) {
+      html += `<h2>${t}</h2>`;
+    } else if (t.startsWith('- ') || t.startsWith('* ')) {
+      html += `<li>${t.substring(2)}</li>`;
+    } else {
+      html += `<p>${t}</p>`;
+    }
+  });
+
+  return html;
+}
+</script>
+</body>
+</html>
