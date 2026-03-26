@@ -17,24 +17,37 @@
   --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;
   --border:#ffffff0a;--radius:12px;
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;overflow-x:hidden}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
 
-.bg-grid{position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;z-index:0;pointer-events:none}
-.bg-glow{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(150px);opacity:.12;pointer-events:none;z-index:0}
-.bg-glow-1{top:-200px;left:-100px;background:var(--accent)}
-.bg-glow-2{bottom:-200px;right:-100px;background:#4f46e5}
+/* Cosmic Nebula Background */
+.cosmic-bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:radial-gradient(ellipse at 20% 50%,#1a0533 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,#0d1b3e 0%,transparent 50%),radial-gradient(ellipse at 50% 80%,#1e0a3a 0%,transparent 50%),var(--bg)}
+.nebula{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;animation:nebulaDrift 20s ease-in-out infinite alternate}
+.nebula-1{width:500px;height:500px;top:-10%;left:-5%;background:radial-gradient(circle,rgba(124,58,237,.2),rgba(79,70,229,.1),transparent 70%)}
+.nebula-2{width:600px;height:400px;top:30%;right:-10%;background:radial-gradient(circle,rgba(139,92,246,.15),rgba(99,102,241,.08),transparent 70%);animation-delay:-7s;animation-duration:25s}
+.nebula-3{width:400px;height:500px;bottom:-5%;left:30%;background:radial-gradient(circle,rgba(168,85,247,.12),rgba(124,58,237,.06),transparent 70%);animation-delay:-14s}
+.nebula-4{width:300px;height:300px;top:15%;left:50%;background:radial-gradient(circle,rgba(236,72,153,.08),rgba(168,85,247,.05),transparent 70%);animation-delay:-3s;animation-duration:18s}
+@keyframes nebulaDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-15px) scale(1.05)}100%{transform:translate(-10px,10px) scale(.97)}}
+
+/* Stars */
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;animation:twinkle var(--dur) ease-in-out infinite alternate}
+.star.bright{width:3px;height:3px;box-shadow:0 0 6px 1px rgba(167,139,250,.6)}
+@keyframes twinkle{0%{opacity:.2;transform:scale(.8)}100%{opacity:1;transform:scale(1.2)}}
 
 .app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:2rem}
 
-header{text-align:center;margin-bottom:2.5rem}
-header .logo{display:inline-flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
-header .logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),#4f46e5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:#fff;box-shadow:0 0 25px var(--accent-glow)}
-header h1{font-size:1.8rem;font-weight:900;background:linear-gradient(135deg,var(--text),var(--accent-bright));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-header p{color:var(--text2);font-size:.85rem;max-width:500px;margin:0 auto}
+header{text-align:center;margin-bottom:2.5rem;padding-top:1rem}
+header .logo{display:inline-block;margin-bottom:1rem;position:relative}
+header .logo img{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(124,92,252,.3);box-shadow:0 0 30px rgba(124,92,252,.2),0 0 60px rgba(124,58,237,.1)}
+header .logo::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(167,139,250,.15);animation:logoRing 4s ease-in-out infinite alternate}
+@keyframes logoRing{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.08);opacity:.2}}
+header h1{font-size:2rem;font-weight:900;background:linear-gradient(135deg,#e0d4ff,var(--accent-bright),#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.25rem;letter-spacing:-.02em}
+header .tagline{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.25em;color:var(--accent);margin-bottom:.75rem}
+header p{color:var(--text2);font-size:.82rem;max-width:520px;margin:0 auto;line-height:1.7}
 
 /* Input Section */
-.input-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;backdrop-filter:blur(10px);margin-bottom:2rem}
+.input-section{background:rgba(15,10,30,.65);border:1px solid rgba(124,92,252,.12);border-radius:16px;padding:2rem;backdrop-filter:blur(20px);margin-bottom:2rem;box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(167,139,250,.08)}
 .input-section h2{font-size:1rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
 .url-row{display:flex;gap:.75rem;margin-bottom:1rem}
 .url-input{flex:1;padding:.85rem 1.1rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:.9rem;outline:none;transition:border-color .3s}
@@ -76,7 +89,7 @@ header p{color:var(--text2);font-size:.85rem;max-width:500px;margin:0 auto}
 .results-header h2{font-size:1.2rem;font-weight:800}
 .export-btns{display:flex;gap:.5rem}
 
-.result-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;backdrop-filter:blur(10px)}
+.result-card{background:rgba(15,10,30,.6);border:1px solid rgba(124,92,252,.1);border-radius:14px;padding:1.5rem;margin-bottom:1rem;backdrop-filter:blur(20px);box-shadow:0 4px 20px rgba(0,0,0,.2),inset 0 1px 0 rgba(167,139,250,.06)}
 .result-card h3{font-size:.9rem;font-weight:700;color:var(--accent-bright);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
 .result-card h3 .badge{font-size:.6rem;padding:.2rem .5rem;background:var(--accent-glow);border-radius:4px;font-weight:600}
 .result-content{font-size:.82rem;color:var(--text2);line-height:1.8;white-space:pre-wrap}
@@ -107,17 +120,21 @@ header p{color:var(--text2);font-size:.85rem;max-width:500px;margin:0 auto}
 </head>
 <body>
 
-<div class="bg-grid"></div>
-<div class="bg-glow bg-glow-1"></div>
-<div class="bg-glow bg-glow-2"></div>
+<div class="cosmic-bg"></div>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="nebula nebula-3"></div>
+<div class="nebula nebula-4"></div>
+<div class="stars" id="stars"></div>
 
 <div class="app">
   <header>
     <div class="logo">
-      <div class="logo-icon">VIE</div>
+      <img src="logo.jpeg" alt="Violet Media">
     </div>
     <h1>Violet Intel Extractor</h1>
-    <p>Scrape any client website and generate a structured knowledge base for chatbot/voice agent deployment.</p>
+    <div class="tagline">Client Website Intelligence</div>
+    <p>Scrape any client website and generate a structured knowledge base for chatbot and voice agent deployment.</p>
   </header>
 
   <!-- Input -->
@@ -884,6 +901,21 @@ function formatForExport(text) {
 
   return html;
 }
+
+// ── Generate Stars ──
+(function generateStars() {
+  const container = document.getElementById('stars');
+  const count = 120;
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = `star${Math.random() > 0.85 ? ' bright' : ''}`;
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
+    star.style.animationDelay = (Math.random() * 5) + 's';
+    container.appendChild(star);
+  }
+})();
 </script>
 </body>
 </html>
